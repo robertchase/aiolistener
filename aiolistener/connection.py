@@ -28,7 +28,7 @@ class Connection(ABC):
         self.id = next(connection_sequence)  # pylint: disable=invalid-name
         self.reader = reader
         self.writer = writer
-        self.peerhost, self.peerport = writer.get_extra_info("peername")
+        self.peerhost, self.peerport = writer.get_extra_info("peername")[:2]
 
     async def setup(self):
         """perform async connection setup"""

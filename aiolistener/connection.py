@@ -57,7 +57,7 @@ class Connection(ABC):
 
 async def on_connection(listener, reader, writer):
     """handle activity on listener connection"""
-    con = listener.connection_factory(reader, writer)
+    con = listener.connection_factory(reader, writer, *listener.args)
     await con.setup()
     log.info("open server=%s socket=%s:%s, cid=%s", listener.name,
              con.peerhost, con.peerport, con.id)

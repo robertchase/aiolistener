@@ -12,10 +12,11 @@ log = logging.getLogger(__name__)
 class Listener:  # pylint: disable=too-few-public-methods
     """listener class"""
 
-    def __init__(self, name, port, connection_factory):
+    def __init__(self, name, port, connection_factory, *args):
         self.name = name
         self.port = int(port)
         self.connection_factory = connection_factory
+        self.args = args
         self.server = None
 
 
@@ -25,9 +26,9 @@ class _Listeners:
     def __init__(self):
         self.listeners = []
 
-    async def add(self, name, port, connection):
+    async def add(self, name, port, connection, *args):
         """start a listener on a port"""
-        listener = Listener(name, port, connection)
+        listener = Listener(name, port, connection, *args)
         log.info("starting server '%s' on port %d", listener.name,
                  listener.port)
         callback = partial(on_connection, listener)

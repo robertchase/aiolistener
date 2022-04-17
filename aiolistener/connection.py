@@ -56,7 +56,15 @@ class Connection(ABC):
 
 
 async def on_connection(listener, reader, writer):
-    """handle activity on listener connection"""
+    """handle activity on listener connection
+
+       This is a callback provided to the start_server function when a new
+       listener is added with _Listeners.add.
+
+       A new connection instance is created using the specified reader and
+       writer along with any *args provided in _Listeners.add. Packets are
+       handled sequentially until the handle_packet return is not truthy.
+    """
     con = listener.connection_factory(reader, writer, *listener.args)
     await con.setup()
     log.info("open server=%s socket=%s:%s, cid=%s", listener.name,

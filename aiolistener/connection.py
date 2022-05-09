@@ -54,6 +54,15 @@ class Connection(ABC):
     def on_exception(self, exc):
         """deal with general Exception"""
 
+    def on_open(self, message):
+        log.info(message)
+
+    def on_remote_close(self):
+        log.info("remote close, cid=%s", self.id)
+
+    def on_close(self, message):
+        log.info(message)
+
 
 async def on_connection(listener, reader, writer):
     """handle activity on listener connection
@@ -67,16 +76,22 @@ async def on_connection(listener, reader, writer):
     """
     con = listener.connection_factory(reader, writer, *listener.args)
     await con.setup()
-    log.info("open server=%s socket=%s:%s, cid=%s", listener.name,
-             con.peerhost, con.peerport, con.id)
     t_start = time.perf_counter()
+
+    con.on_open(
+        f"open server={listener.name}"
+        f" socket={con.peerhost}:{con.peerport}"
+        f" cid={con.id}")
 
     while await handle_packet(con):
         pass
 
     await writer.drain()
-    t_elapsed = time.perf_counter() - t_start
-    log.info("close cid=%s, t=%f", con.id, t_elapsed)
+
+    con.on_close(
+        f"close cid={con.id}"
+        f" t={time.perf_counter() - t_start:.6f}")
+
     writer.close()
 
 
@@ -90,11 +105,11 @@ async def handle_packet(con):
             packet_id = next(packet_sequence)
             keep_alive = await con.handle(packet, packet_id)
         else:
-            log.info("remote close, cid=%s", con.id)
+            con.on_remote_close()
     except ProtocolError:
-        log.info("bad packet close, cid=%s", con.id)
+        log.warning("bad packet close, cid=%s", con.id)
     except asyncio.exceptions.TimeoutError:
-        log.info("timeout close, cid=%s", con.id)
+        log.warning("timeout close, cid=%s", con.id)
     except Exception as exc:  # pylint: disable=broad-except
         log.exception("internal error, cid=%s", con.id)
         try:

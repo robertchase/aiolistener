@@ -55,12 +55,15 @@ class Connection(ABC):
         """deal with general Exception"""
 
     def on_open(self, message):
+        """handle on-open message"""
         log.info(message)
 
     def on_remote_close(self):
+        """handle remote-close condition"""
         log.info("remote close, cid=%s", self.id)
 
     def on_close(self, message):
+        """handle on-close message"""
         log.info(message)
 
 
@@ -74,7 +77,7 @@ async def on_connection(listener, reader, writer):
        writer along with any *args provided in _Listeners.add. Packets are
        handled sequentially until the handle_packet return is not truthy.
     """
-    con = listener.connection_factory(reader, writer, *listener.args)
+    con = listener.connection(reader, writer, *listener.args)
     await con.setup()
     t_start = time.perf_counter()
 
@@ -100,8 +103,7 @@ async def handle_packet(con):
 
     keep_alive = False
     try:
-        packet = await con.next_packet()
-        if packet:
+        if packet := await con.next_packet():
             packet_id = next(packet_sequence)
             keep_alive = await con.handle(packet, packet_id)
         else:

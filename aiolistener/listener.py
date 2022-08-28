@@ -12,10 +12,10 @@ log = logging.getLogger(__name__)
 class Listener:  # pylint: disable=too-few-public-methods
     """listener class"""
 
-    def __init__(self, name, port, connection_factory, *args):
+    def __init__(self, name, port, connection, *args):
         self.name = name
         self.port = int(port)
-        self.connection_factory = connection_factory
+        self.connection = connection
         self.args = args
         self.server = None
 
@@ -27,7 +27,14 @@ class _Listeners:
         self.listeners = []
 
     async def add(self, name, port, connection, *args):
-        """start a listener on a port"""
+        """set up a listener on a port
+
+           name - name of connection; used in loggint
+           port - listening port
+           connection - aiolistener.Connection class that manages each
+                        inbound connection
+           args - optional additional args to Connection __init__
+        """
         listener = Listener(name, port, connection, *args)
         log.info("starting server '%s' on port %d", listener.name,
                  listener.port)

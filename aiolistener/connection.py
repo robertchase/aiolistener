@@ -29,6 +29,10 @@ class Connection(ABC):
         self.reader = reader
         self.writer = writer
         self.peerhost, self.peerport = writer.get_extra_info("peername")[:2]
+        self.on_init()
+
+    def on_init(self):
+        """perform simple init operations not requiring override"""
 
     async def setup(self):
         """perform async connection setup"""

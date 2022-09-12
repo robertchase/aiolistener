@@ -29,11 +29,11 @@ class _Listeners:
     async def add(self, name, port, connection, *args):
         """set up a listener on a port
 
-           name - name of connection; used in loggint
+           name - name of connection; used in logging
            port - listening port
            connection - aiolistener.Connection class that manages each
                         inbound connection
-           args - optional additional args to Connection __init__
+           args - optional additional args for Connection __init__
         """
         listener = Listener(name, port, connection, *args)
         log.info("starting server '%s' on port %d", listener.name,

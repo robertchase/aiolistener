@@ -58,17 +58,23 @@ class Connection(ABC):
     def on_exception(self, exc):
         """deal with general Exception"""
 
-    def on_open(self, message):
+    def on_open_message(self, message):
         """handle on-open message"""
         log.info(message)
+
+    async def on_open(self):
+        """handle things on open"""
 
     def on_remote_close(self):
         """handle remote-close condition"""
         log.info("remote close, cid=%s", self.id)
 
-    def on_close(self, message):
+    def on_close_message(self, message):
         """handle on-close message"""
         log.info(message)
+
+    async def on_close(self):
+        """handle things on close"""
 
 
 async def on_connection(listener, reader, writer):
@@ -82,24 +88,29 @@ async def on_connection(listener, reader, writer):
        handled sequentially until the handle_packet return is not truthy.
     """
     con = listener.connection(reader, writer, *listener.args)
-    await con.setup()
-    t_start = time.perf_counter()
 
-    con.on_open(
-        f"open server={listener.name}"
-        f" socket={con.peerhost}:{con.peerport}"
-        f" cid={con.id}")
+    try:
+        await con.setup()
 
-    while await handle_packet(con):
-        pass
+        t_start = time.perf_counter()
 
-    await writer.drain()
+        con.on_open_message(
+            f"open server={listener.name}"
+            f" socket={con.peerhost}:{con.peerport}"
+            f" cid={con.id}")
+        await con.on_open()
 
-    con.on_close(
-        f"close cid={con.id}"
-        f" t={time.perf_counter() - t_start:.6f}")
+        while await handle_packet(con):
+            pass
 
-    writer.close()
+        await writer.drain()
+
+        await con.on_close()
+        con.on_close_message(
+            f"close cid={con.id}"
+            f" t={time.perf_counter() - t_start:.6f}")
+    finally:
+        writer.close()
 
 
 async def handle_packet(con):
